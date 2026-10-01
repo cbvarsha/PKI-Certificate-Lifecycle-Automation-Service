@@ -1,208 +1,162 @@
 # PKI Certificate Lifecycle Automation Service
 
-> Enterprise-style portfolio implementation for certificate lifecycle management, trusted-infrastructure workflows, secure signing concepts, policy governance, RBAC, auditability and operational monitoring.
+> Enterprise-style control plane for certificate lifecycle automation, PKI governance, policy enforcement, approvals, auditability and operational monitoring.
 
 ![Status](https://img.shields.io/badge/status-active%20development-2563eb)
+![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB)
 ![Backend](https://img.shields.io/badge/backend-Python%20%2F%20Flask-111827)
-![Frontend](https://img.shields.io/badge/frontend-React%20%2F%20Vite-61DAFB)
-![Database](https://img.shields.io/badge/database-SQLAlchemy-7B68EE)
-![Domain](https://img.shields.io/badge/domain-PKI%20%2F%20Security-10B981)
+![Domain](https://img.shields.io/badge/domain-PKI%20%2F%20X.509-10B981)
+![CI](https://github.com/cbvarsha/PKI-Certificate-Lifecycle-Automation-Service/actions/workflows/ci.yml/badge.svg)
 
-## Overview
+## Executive Overview
 
-The **PKI Certificate Lifecycle Automation Service** is a control-plane style portfolio application for modelling how certificates and trusted infrastructure can be managed across their lifecycle.
+The **PKI Certificate Lifecycle Automation Service** is an enterprise-style security control plane designed to centralize certificate requests, policy validation, approval workflows, inventory, renewal, revocation, trust configuration, RBAC, audit evidence and service health.
 
-The project brings together:
+The application is built as an operational system rather than a static dashboard. Lifecycle actions update shared application state so certificate inventory, approval queues, audit history, alerts and dashboard metrics remain synchronized.
 
-- certificate requests and policy validation;
-- issuance simulation;
-- certificate inventory;
-- renewal and expiry monitoring;
-- revocation workflows;
-- secure signing request concepts;
-- HSM / Key Vault abstractions;
-- cryptographic policies;
-- compliance rules;
-- trust configuration;
-- audit logs;
-- security events and alerts;
-- system-health monitoring;
-- users, roles and permissions.
-
-The goal is to understand the architecture and controls behind trusted infrastructure by building them into a coherent application rather than presenting isolated CRUD screens.
-
-> **Security boundary:** This is a portfolio/learning implementation. It is not a production Certificate Authority and does not operate a real HSM. Real private keys, production credentials and customer data must not be stored in this repository.
+> **Development status:** active. The project uses synthetic enterprise data and simulated CA/HSM boundaries. It is not a production Certificate Authority and does not store real private keys.
 
 ## Architecture
 
-```text
-                 Security / PKI Operators
-                           |
-                           v
-                 React + Tailwind UI
-                           |
-                           v
-                    Flask REST API
-                           |
-             +-------------+-------------+
-             |             |             |
-             v             v             v
-       Policy Engine   Lifecycle     Signing / Key
-                      Workflows       Controls
-             |             |             |
-             +-------------+-------------+
-                           |
-                           v
-                 SQLAlchemy Persistence
-                           |
-             +-------------+-------------+
-             |             |             |
-        Certificates    Audit        Monitoring
-        & Requests      Events       & Alerts
+```mermaid
+flowchart TD
+  A["Users / Role Personas"] --> B["React + Vite Control Plane"]
+  B --> C["Shared Workflow State"]
+  B --> D["Flask REST API"]
+  D --> E["Authentication & RBAC Boundary"]
+  D --> F["Certificate Lifecycle Service"]
+  D --> G["Policy Engine"]
+  D --> H["Audit & Evidence Service"]
+  F --> I["CA / Issuance Adapter"]
+  F --> J["HSM / Key Vault Boundary"]
+  G --> K[("SQL Persistence")]
+  H --> K
+  F --> K
+  E --> K
 ```
 
-The UI is an operational control plane. Security-sensitive authorization and lifecycle controls should be enforced server-side in a production implementation.
+See the detailed [System Design](docs/SYSTEM-DESIGN.md) and [Architecture Guide](ARCHITECTURE.md).
 
-## Core workflow
+## Certificate Lifecycle Flow
 
-```text
-Certificate Request
-        |
-        v
-Policy Validation
-        |
-        v
-Approval / Authorization
-        |
-        +----> Issuance Simulation
-        |
-        v
-Active Certificate
-        |
-   +----+----+
-   |         |
-Renewal   Revocation
-   |         |
-   +----+----+
-        |
-        v
-Audit + Events + Monitoring
+```mermaid
+flowchart LR
+  A["New Request"] --> B["Validate Input"]
+  B --> C["Evaluate Policy"]
+  C --> D{"Compliant?"}
+  D -- "No" --> E["Reject / Remediate"]
+  D -- "Yes" --> F["Approval Queue"]
+  F --> G{"Approver Decision"}
+  G -- "Reject" --> H["Rejected"]
+  G -- "Approve" --> I["Issue Certificate"]
+  I --> J["Active Inventory"]
+  J --> K["Renew"]
+  J --> L["Revoke"]
+  K --> J
+  L --> M["Revoked"]
+  F --> N["Audit Evidence"]
+  I --> N
+  K --> N
+  L --> N
 ```
 
-## Application domains
+## Capability Map
 
-| Domain | Representative capabilities |
+| Domain | Capabilities |
 |---|---|
-| Certificate Management | New Request, My Requests, Certificates, Renewals, Revocation |
-| Secure Signing | Signing Requests, key/signing controls, HSM/Key Vault concepts |
-| Policy | Crypto Policies, Compliance Rules, Trust Configuration |
-| Audit & Monitoring | Audit Logs, Events & Alerts, System Health |
-| Identity & Access | Users, Roles & Permissions |
-| Platform | Dashboard, settings, operational views |
+| Certificate Management | Request, policy validation, approval, inventory, renewal, revocation |
+| PKI Governance | Crypto policies, compliance rules, trust configuration |
+| Secure Operations | HSM / Key Vault visibility and cryptographic boundary modelling |
+| Audit & Monitoring | Searchable audit evidence, events, alerts, health telemetry |
+| Identity & Access | Users, roles, permissions, separation-of-duties concepts |
+| Control Plane | Shared state, routed workflows, synchronized dashboard metrics |
 
-## Technology
-
-**Backend**
-- Python
-- Flask
-- Flask-SQLAlchemy
-- SQLAlchemy
-
-**Frontend**
-- React
-- Vite
-- Tailwind CSS
-- Dashboard/chart components
-
-**Security concepts**
-- PKI / certificate lifecycle
-- RBAC
-- separation of responsibilities
-- cryptographic policy
-- auditability
-- HSM / Key Vault boundaries
-- compliance controls
-
-## Seeded operational data
-
-The application is designed around meaningful seeded data rather than only a few records. Hundreds of realistic certificate records and related operational entities are used to make expiry monitoring, renewal queues and dashboard views behave more like an operational system.
-
-The seeded data is synthetic and should never contain real customer or production information.
-
-## Repository structure
+## Repository Layout
 
 ```text
-PKI-Certificate-Lifecycle-Automation-Service/
+.
+├── .github/
+│   ├── workflows/ci.yml
+│   ├── ISSUE_TEMPLATE/
+│   └── pull_request_template.md
 ├── backend/
-│   ├── app/
-│   ├── tests/
+│   ├── app.py
 │   ├── requirements.txt
-│   └── Dockerfile
+│   └── run.bat
 ├── frontend/
 │   ├── src/
-│   ├── package.json
-│   └── Dockerfile
+│   │   ├── data.js
+│   │   ├── store.js
+│   │   ├── main.jsx
+│   │   └── style.css
+│   ├── index.html
+│   └── package.json
 ├── docs/
-│   ├── ARCHITECTURE.md
 │   ├── API.md
+│   ├── DATA-MODEL.md
 │   ├── DEMO-WALKTHROUGH.md
+│   ├── OPERATIONS.md
+│   ├── PROJECT-GUIDE.md
 │   ├── RUNBOOK.md
-│   └── PROJECT-GUIDE.md
-├── .github/
-│   └── workflows/
-├── docker-compose.yml
-├── .env.example
+│   ├── SYSTEM-DESIGN.md
+│   └── WORKFLOWS.md
+├── ARCHITECTURE.md
 ├── SECURITY.md
 ├── CONTRIBUTING.md
+├── .env.example
 └── README.md
 ```
 
-> The repository documentation is being established first. Application source is kept separate from documentation commits so the implementation can be validated before it is presented as complete.
+## Local Development
 
-## Local development
+### Backend
 
-The exact application startup commands depend on the current backend/frontend source tree. Once the source is committed, this README will contain the verified commands for the checked-in implementation.
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python app.py
+```
 
-## Engineering principles
+API: `http://127.0.0.1:8000`
 
-1. Model lifecycle states explicitly.
-2. Keep authorization and policy decisions server-side.
-3. Separate requester and approver responsibilities where required.
-4. Never expose private-key material to the browser.
-5. Make operational state observable.
-6. Keep simulated infrastructure clearly labelled.
-7. Use synthetic data for portfolio demonstrations.
-8. Document production gaps honestly.
+### Frontend
 
-## Production evolution
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-A production-grade implementation would require, at minimum:
+Open the Vite URL printed in the terminal.
 
-- enterprise identity, SSO and MFA;
-- server-side authorization and policy enforcement;
-- managed database infrastructure;
-- real CA integration;
-- real HSM/KMS integration;
-- protected secret management;
-- TLS and secure service-to-service communication;
-- tamper-resistant/immutable audit storage;
-- centralized logging and monitoring;
-- rate limiting;
-- backup/recovery;
-- vulnerability management;
-- formal threat modelling;
-- independent security review.
+## Data & Demonstration Scope
 
-## Portfolio positioning
+The seeded environment contains **560 synthetic certificates**, certificate requests, signing workflow records, users, roles, crypto policies, compliance rules, trust authorities, HSM/Key Vault health objects, alerts and hundreds of audit events. No real organizational or customer data is used.
 
-**PKI Certificate Lifecycle Automation Service** — Built a Flask/SQLAlchemy and React/Tailwind control-plane application to model certificate lifecycle automation, policy validation, issuance simulation, renewal and revocation workflows, secure signing concepts, RBAC, auditability, compliance controls and operational monitoring.
+## Security Boundary
 
-## Documentation
+The browser is not a trusted cryptographic boundary. A production implementation must enforce authorization and policy server-side, use authenticated identities and MFA, store private keys only in approved HSM/KMS services, protect audit evidence from tampering, and integrate with real CA revocation and issuance services.
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [API](docs/API.md)
-- [Demo Walkthrough](docs/DEMO-WALKTHROUGH.md)
+See [SECURITY.md](SECURITY.md).
+
+## Engineering Documentation
+
+- [Architecture Guide](ARCHITECTURE.md)
+- [System Design](docs/SYSTEM-DESIGN.md)
+- [Workflow Catalogue](docs/WORKFLOWS.md)
+- [Data Model](docs/DATA-MODEL.md)
+- [API Guide](docs/API.md)
+- [Operations & Reliability](docs/OPERATIONS.md)
 - [Runbook](docs/RUNBOOK.md)
-- [Project Guide](docs/PROJECT-GUIDE.md)
-- [Security Policy](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
+- [Demo Walkthrough](docs/DEMO-WALKTHROUGH.md)
+- [Contribution Standard](CONTRIBUTING.md)
+
+## Current Engineering Roadmap
+
+The next hardening phase focuses on server-backed workflow persistence, authenticated identity, server-side authorization, CA connector abstractions, HSM/KMS adapters, structured migrations, automated workflow tests, observability and deployment hardening.
+
+---
+
+**Security engineering reference implementation — designed around PKI lifecycle governance, auditability and operational control.**
